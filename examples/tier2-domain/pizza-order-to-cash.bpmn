@@ -1,0 +1,137 @@
+<?xml version="1.0" standalone="yes"?>
+<!-- Source: bpmn-io/bpmn-js-examples - pizza collaboration diagram
+     Domain relevance: two-party order-to-cash pattern (customer places order,
+     vendor fulfils, money/goods exchange via message flows). Maps to ISA-95
+     procurement / order management patterns. -->
+<semantic:definitions id="_1275940932088" targetNamespace="http://www.trisotech.com/definitions/_1275940932088" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL">
+    <semantic:message id="_1275940932310"/>
+    <semantic:message id="_1275940932433"/>
+    <semantic:process isExecutable="false" id="_6-1">
+        <semantic:laneSet id="ls_6-438">
+            <semantic:lane name="clerk" id="_6-650">
+                <semantic:flowNodeRef>_6-450</semantic:flowNodeRef>
+                <semantic:flowNodeRef>_6-652</semantic:flowNodeRef>
+                <semantic:flowNodeRef>_6-674</semantic:flowNodeRef>
+                <semantic:flowNodeRef>_6-695</semantic:flowNodeRef>
+            </semantic:lane>
+            <semantic:lane name="pizza chef" id="_6-446">
+                <semantic:flowNodeRef>_6-463</semantic:flowNodeRef>
+            </semantic:lane>
+            <semantic:lane name="delivery boy" id="_6-448">
+                <semantic:flowNodeRef>_6-514</semantic:flowNodeRef>
+                <semantic:flowNodeRef>_6-565</semantic:flowNodeRef>
+                <semantic:flowNodeRef>_6-616</semantic:flowNodeRef>
+            </semantic:lane>
+        </semantic:laneSet>
+        <semantic:startEvent name="Order received" id="_6-450">
+            <semantic:outgoing>_6-630</semantic:outgoing>
+            <semantic:messageEventDefinition messageRef="_1275940932310"/>
+        </semantic:startEvent>
+        <semantic:parallelGateway gatewayDirection="Unspecified" name="" id="_6-652">
+            <semantic:incoming>_6-630</semantic:incoming>
+            <semantic:outgoing>_6-691</semantic:outgoing>
+            <semantic:outgoing>_6-693</semantic:outgoing>
+        </semantic:parallelGateway>
+        <semantic:intermediateCatchEvent parallelMultiple="false" name="&#8222;where is my pizza?&#8220;" id="_6-674">
+            <semantic:incoming>_6-691</semantic:incoming>
+            <semantic:incoming>_6-746</semantic:incoming>
+            <semantic:outgoing>_6-748</semantic:outgoing>
+            <semantic:messageEventDefinition messageRef="_1275940932433"/>
+        </semantic:intermediateCatchEvent>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Calm customer" id="_6-695">
+            <semantic:incoming>_6-748</semantic:incoming>
+            <semantic:outgoing>_6-746</semantic:outgoing>
+        </semantic:task>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Bake the pizza" id="_6-463">
+            <semantic:incoming>_6-693</semantic:incoming>
+            <semantic:outgoing>_6-632</semantic:outgoing>
+        </semantic:task>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Deliver the pizza" id="_6-514">
+            <semantic:incoming>_6-632</semantic:incoming>
+            <semantic:outgoing>_6-634</semantic:outgoing>
+        </semantic:task>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Receive payment" id="_6-565">
+            <semantic:incoming>_6-634</semantic:incoming>
+            <semantic:outgoing>_6-636</semantic:outgoing>
+        </semantic:task>
+        <semantic:endEvent name="" id="_6-616">
+            <semantic:incoming>_6-636</semantic:incoming>
+            <semantic:terminateEventDefinition/>
+        </semantic:endEvent>
+        <semantic:sequenceFlow sourceRef="_6-450" targetRef="_6-652" name="" id="_6-630"/>
+        <semantic:sequenceFlow sourceRef="_6-463" targetRef="_6-514" name="" id="_6-632"/>
+        <semantic:sequenceFlow sourceRef="_6-514" targetRef="_6-565" name="" id="_6-634"/>
+        <semantic:sequenceFlow sourceRef="_6-565" targetRef="_6-616" name="" id="_6-636"/>
+        <semantic:sequenceFlow sourceRef="_6-652" targetRef="_6-674" name="" id="_6-691"/>
+        <semantic:sequenceFlow sourceRef="_6-652" targetRef="_6-463" name="" id="_6-693"/>
+        <semantic:sequenceFlow sourceRef="_6-695" targetRef="_6-674" name="" id="_6-746"/>
+        <semantic:sequenceFlow sourceRef="_6-674" targetRef="_6-695" name="" id="_6-748"/>
+    </semantic:process>
+    <semantic:message id="_1275940932198"/>
+    <semantic:process isExecutable="false" id="_6-2">
+        <semantic:startEvent name="Hungry for pizza" id="_6-61">
+            <semantic:outgoing>_6-125</semantic:outgoing>
+        </semantic:startEvent>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Select a pizza" id="_6-74">
+            <semantic:incoming>_6-125</semantic:incoming>
+            <semantic:outgoing>_6-178</semantic:outgoing>
+        </semantic:task>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Order a pizza" id="_6-127">
+            <semantic:incoming>_6-178</semantic:incoming>
+            <semantic:outgoing>_6-420</semantic:outgoing>
+        </semantic:task>
+        <semantic:eventBasedGateway eventGatewayType="Exclusive" instantiate="false" gatewayDirection="Unspecified" name="" id="_6-180">
+            <semantic:incoming>_6-420</semantic:incoming>
+            <semantic:incoming>_6-430</semantic:incoming>
+            <semantic:outgoing>_6-422</semantic:outgoing>
+            <semantic:outgoing>_6-424</semantic:outgoing>
+        </semantic:eventBasedGateway>
+        <semantic:intermediateCatchEvent parallelMultiple="false" name="pizza received" id="_6-202">
+            <semantic:incoming>_6-422</semantic:incoming>
+            <semantic:outgoing>_6-428</semantic:outgoing>
+            <semantic:messageEventDefinition messageRef="_1275940932198"/>
+        </semantic:intermediateCatchEvent>
+        <semantic:intermediateCatchEvent parallelMultiple="false" name="60 minutes" id="_6-219">
+            <semantic:incoming>_6-424</semantic:incoming>
+            <semantic:outgoing>_6-426</semantic:outgoing>
+            <semantic:timerEventDefinition>
+                <semantic:timeDate/>
+            </semantic:timerEventDefinition>
+        </semantic:intermediateCatchEvent>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Ask for the pizza" id="_6-236">
+            <semantic:incoming>_6-426</semantic:incoming>
+            <semantic:outgoing>_6-430</semantic:outgoing>
+        </semantic:task>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Pay the pizza" id="_6-304">
+            <semantic:incoming>_6-428</semantic:incoming>
+            <semantic:outgoing>_6-434</semantic:outgoing>
+        </semantic:task>
+        <semantic:task completionQuantity="1" isForCompensation="false" startQuantity="1" name="Eat the pizza" id="_6-355">
+            <semantic:incoming>_6-434</semantic:incoming>
+            <semantic:outgoing>_6-436</semantic:outgoing>
+        </semantic:task>
+        <semantic:endEvent name="Hunger satisfied" id="_6-406">
+            <semantic:incoming>_6-436</semantic:incoming>
+        </semantic:endEvent>
+        <semantic:sequenceFlow sourceRef="_6-61" targetRef="_6-74" name="" id="_6-125"/>
+        <semantic:sequenceFlow sourceRef="_6-74" targetRef="_6-127" name="" id="_6-178"/>
+        <semantic:sequenceFlow sourceRef="_6-127" targetRef="_6-180" name="" id="_6-420"/>
+        <semantic:sequenceFlow sourceRef="_6-180" targetRef="_6-202" name="" id="_6-422"/>
+        <semantic:sequenceFlow sourceRef="_6-180" targetRef="_6-219" name="" id="_6-424"/>
+        <semantic:sequenceFlow sourceRef="_6-219" targetRef="_6-236" name="" id="_6-426"/>
+        <semantic:sequenceFlow sourceRef="_6-202" targetRef="_6-304" name="" id="_6-428"/>
+        <semantic:sequenceFlow sourceRef="_6-236" targetRef="_6-180" name="" id="_6-430"/>
+        <semantic:sequenceFlow sourceRef="_6-304" targetRef="_6-355" name="" id="_6-434"/>
+        <semantic:sequenceFlow sourceRef="_6-355" targetRef="_6-406" name="" id="_6-436"/>
+    </semantic:process>
+    <semantic:collaboration id="C1275940932557">
+        <semantic:participant name="Pizza Customer" processRef="_6-2" id="_6-53"/>
+        <semantic:participant name="Pizza vendor" processRef="_6-1" id="_6-438"/>
+        <semantic:messageFlow name="pizza order" sourceRef="_6-127" targetRef="_6-450" id="_6-638"/>
+        <semantic:messageFlow name="" sourceRef="_6-236" targetRef="_6-674" id="_6-642"/>
+        <semantic:messageFlow name="receipt" sourceRef="_6-565" targetRef="_6-304" id="_6-646"/>
+        <semantic:messageFlow name="money" sourceRef="_6-304" targetRef="_6-565" id="_6-648"/>
+        <semantic:messageFlow name="pizza" sourceRef="_6-514" targetRef="_6-202" id="_6-640"/>
+        <semantic:messageFlow name="" sourceRef="_6-695" targetRef="_6-236" id="_6-750"/>
+    </semantic:collaboration>
+</semantic:definitions>

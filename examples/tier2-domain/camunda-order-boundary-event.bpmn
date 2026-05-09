@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Source: camunda/camunda-external-task-client-js examples
+     Domain relevance: order processing with subprocess, conditional boundary event,
+     and external service task (invoice creation). Tests parser handling of
+     boundaryEvent.attachedToRef and conditionExpression. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0t9x9qf" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.15.1">
+  <bpmn:process id="Order_Process" name="Order Process" isExecutable="true" camunda:historyTimeToLive="P180D">
+    <bpmn:startEvent id="StartEvent_1" name="order received">
+      <bpmn:outgoing>SequenceFlow_0xz1ar4</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">R10/PT5S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0xz1ar4" sourceRef="StartEvent_1" targetRef="Task_1nbdup3"/>
+    <bpmn:subProcess id="Task_1nbdup3">
+      <bpmn:incoming>SequenceFlow_0xz1ar4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0mbhk8d</bpmn:outgoing>
+      <bpmn:startEvent id="StartEvent_1iul9gy">
+        <bpmn:outgoing>SequenceFlow_1e8m45t</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="SequenceFlow_1e8m45t" sourceRef="StartEvent_1iul9gy" targetRef="Task_06z99p1"/>
+      <bpmn:serviceTask id="Task_06z99p1" name="Create Invoice" camunda:type="external" camunda:topic="invoiceCreator">
+        <bpmn:incoming>SequenceFlow_1e8m45t</bpmn:incoming>
+        <bpmn:outgoing>SequenceFlow_131wrxd</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="SequenceFlow_131wrxd" sourceRef="Task_06z99p1" targetRef="EndEvent_036eexy"/>
+      <bpmn:endEvent id="EndEvent_036eexy">
+        <bpmn:incoming>SequenceFlow_131wrxd</bpmn:incoming>
+      </bpmn:endEvent>
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="BoundaryEvent_1y1bvad" attachedToRef="Task_1nbdup3">
+      <bpmn:outgoing>SequenceFlow_1k59pur</bpmn:outgoing>
+      <bpmn:conditionalEventDefinition>
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">${date != null}</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0mbhk8d" sourceRef="Task_1nbdup3" targetRef="EndEvent_00asnpf"/>
+    <bpmn:endEvent id="EndEvent_00asnpf">
+      <bpmn:incoming>SequenceFlow_0mbhk8d</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1k59pur" sourceRef="BoundaryEvent_1y1bvad" targetRef="Task_1yjkccw"/>
+    <bpmn:task id="Task_1yjkccw" name="Store invoice">
+      <bpmn:incoming>SequenceFlow_1k59pur</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_140kl02</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="SequenceFlow_140kl02" sourceRef="Task_1yjkccw" targetRef="EndEvent_0q2wrcp"/>
+    <bpmn:endEvent id="EndEvent_0q2wrcp">
+      <bpmn:incoming>SequenceFlow_140kl02</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+</bpmn:definitions>

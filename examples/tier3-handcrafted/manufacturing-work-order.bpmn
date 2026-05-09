@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Manufacturing Work Order Process — hand-authored for bpmn-onto demos.
+
+  ISA-95 entity mapping:
+    Work Order Released        → ProductionRequest (Level 3 MES)
+    Verify Work Order & BOM    → WorkflowStep, MaterialDefinition check
+    Stage Materials            → MaterialLot consumption / PhysicalAsset (warehouse)
+    Configure Equipment        → PhysicalAsset, Equipment setup record
+    Execute Manufacturing Op   → JobOrder / ProductionJob (core ISA-95 Level 2/3 boundary)
+    Perform Quality Inspection → TestResult, QualityResult
+    Record Production Compl.   → ProductionPerformance, ProductionResponse
+    Log Non-Conformance        → ProductionPerformance (failed), MaintenanceRequest
+
+  Two lanes:
+    Production Operator  — executes the work
+    Quality Inspector    — inspects output and decides pass/fail
+-->
+<definitions
+  xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="manufacturing-work-order"
+  name="Manufacturing Work Order"
+  targetNamespace="http://bpmn-onto.dev/examples/tier3"
+  exporter="bpmn-onto hand-authored">
+
+  <process id="work-order-process"
+           name="Manufacturing Work Order Process"
+           isExecutable="false"
+           processType="None">
+
+    <laneSet id="ls-main">
+      <lane id="lane-operator" name="Production Operator">
+        <flowNodeRef>start-work-order-released</flowNodeRef>
+        <flowNodeRef>task-verify-work-order</flowNodeRef>
+        <flowNodeRef>task-stage-materials</flowNodeRef>
+        <flowNodeRef>task-configure-equipment</flowNodeRef>
+        <flowNodeRef>task-execute-operation</flowNodeRef>
+        <flowNodeRef>task-log-nonconformance</flowNodeRef>
+        <flowNodeRef>end-rework-required</flowNodeRef>
+      </lane>
+      <lane id="lane-quality" name="Quality Inspector">
+        <flowNodeRef>task-inspect-output</flowNodeRef>
+        <flowNodeRef>gw-quality-decision</flowNodeRef>
+        <flowNodeRef>task-record-completion</flowNodeRef>
+        <flowNodeRef>end-work-order-closed</flowNodeRef>
+      </lane>
+    </laneSet>
+
+    <startEvent id="start-work-order-released" name="Work Order Released">
+      <outgoing>sf-start-to-verify</outgoing>
+    </startEvent>
+
+    <userTask id="task-verify-work-order" name="Verify Work Order and BOM">
+      <incoming>sf-start-to-verify</incoming>
+      <outgoing>sf-verify-to-stage</outgoing>
+    </userTask>
+
+    <serviceTask id="task-stage-materials" name="Stage Materials from Warehouse">
+      <incoming>sf-verify-to-stage</incoming>
+      <outgoing>sf-stage-to-configure</outgoing>
+    </serviceTask>
+
+    <userTask id="task-configure-equipment" name="Configure and Set Up Equipment">
+      <incoming>sf-stage-to-configure</incoming>
+      <outgoing>sf-configure-to-execute</outgoing>
+    </userTask>
+
+    <userTask id="task-execute-operation" name="Execute Manufacturing Operation">
+      <incoming>sf-configure-to-execute</incoming>
+      <outgoing>sf-execute-to-inspect</outgoing>
+    </userTask>
+
+    <userTask id="task-inspect-output" name="Perform Quality Inspection">
+      <incoming>sf-execute-to-inspect</incoming>
+      <outgoing>sf-inspect-to-gateway</outgoing>
+    </userTask>
+
+    <exclusiveGateway id="gw-quality-decision"
+                      name="Passed Inspection?"
+                      gatewayDirection="Diverging">
+      <incoming>sf-inspect-to-gateway</incoming>
+      <outgoing>sf-passed</outgoing>
+      <outgoing>sf-failed</outgoing>
+    </exclusiveGateway>
+
+    <serviceTask id="task-record-completion" name="Record Production Completion">
+      <incoming>sf-passed</incoming>
+      <outgoing>sf-record-to-end</outgoing>
+    </serviceTask>
+
+    <userTask id="task-log-nonconformance" name="Log Non-Conformance and Initiate Rework">
+      <incoming>sf-failed</incoming>
+      <outgoing>sf-nonconformance-to-end</outgoing>
+    </userTask>
+
+    <endEvent id="end-work-order-closed" name="Work Order Closed">
+      <incoming>sf-record-to-end</incoming>
+    </endEvent>
+
+    <endEvent id="end-rework-required" name="Rework Required">
+      <incoming>sf-nonconformance-to-end</incoming>
+    </endEvent>
+
+    <sequenceFlow id="sf-start-to-verify"
+                  sourceRef="start-work-order-released"
+                  targetRef="task-verify-work-order"/>
+    <sequenceFlow id="sf-verify-to-stage"
+                  sourceRef="task-verify-work-order"
+                  targetRef="task-stage-materials"/>
+    <sequenceFlow id="sf-stage-to-configure"
+                  sourceRef="task-stage-materials"
+                  targetRef="task-configure-equipment"/>
+    <sequenceFlow id="sf-configure-to-execute"
+                  sourceRef="task-configure-equipment"
+                  targetRef="task-execute-operation"/>
+    <sequenceFlow id="sf-execute-to-inspect"
+                  sourceRef="task-execute-operation"
+                  targetRef="task-inspect-output"/>
+    <sequenceFlow id="sf-inspect-to-gateway"
+                  sourceRef="task-inspect-output"
+                  targetRef="gw-quality-decision"/>
+    <sequenceFlow id="sf-passed" name="Passed"
+                  sourceRef="gw-quality-decision"
+                  targetRef="task-record-completion">
+      <conditionExpression xsi:type="tFormalExpression">inspection_result == 'pass'</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sf-failed" name="Failed"
+                  sourceRef="gw-quality-decision"
+                  targetRef="task-log-nonconformance">
+      <conditionExpression xsi:type="tFormalExpression">inspection_result == 'fail'</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sf-record-to-end"
+                  sourceRef="task-record-completion"
+                  targetRef="end-work-order-closed"/>
+    <sequenceFlow id="sf-nonconformance-to-end"
+                  sourceRef="task-log-nonconformance"
+                  targetRef="end-rework-required"/>
+  </process>
+
+  <bpmndi:BPMNDiagram id="diagram-work-order" name="Manufacturing Work Order">
+    <bpmndi:BPMNPlane id="plane-work-order" bpmnElement="work-order-process">
+
+      <!-- Lane shapes -->
+      <bpmndi:BPMNShape id="lane-operator_di" bpmnElement="lane-operator" isHorizontal="true">
+        <dc:Bounds x="120" y="30" width="1060" height="240"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="130" y="100" width="20" height="100"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane-quality_di" bpmnElement="lane-quality" isHorizontal="true">
+        <dc:Bounds x="120" y="270" width="1060" height="200"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="130" y="330" width="20" height="80"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Start Event -->
+      <bpmndi:BPMNShape id="start-work-order-released_di" bpmnElement="start-work-order-released">
+        <dc:Bounds x="162" y="132" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="140" y="175" width="80" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Task: Verify Work Order -->
+      <bpmndi:BPMNShape id="task-verify-work-order_di" bpmnElement="task-verify-work-order">
+        <dc:Bounds x="250" y="110" width="110" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Task: Stage Materials -->
+      <bpmndi:BPMNShape id="task-stage-materials_di" bpmnElement="task-stage-materials">
+        <dc:Bounds x="410" y="110" width="110" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Task: Configure Equipment -->
+      <bpmndi:BPMNShape id="task-configure-equipment_di" bpmnElement="task-configure-equipment">
+        <dc:Bounds x="570" y="110" width="110" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Task: Execute Operation -->
+      <bpmndi:BPMNShape id="task-execute-operation_di" bpmnElement="task-execute-operation">
+        <dc:Bounds x="730" y="110" width="110" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Task: Log Non-Conformance (Operator lane) -->
+      <bpmndi:BPMNShape id="task-log-nonconformance_di" bpmnElement="task-log-nonconformance">
+        <dc:Bounds x="1010" y="110" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- End: Rework Required (Operator lane) -->
+      <bpmndi:BPMNShape id="end-rework-required_di" bpmnElement="end-rework-required">
+        <dc:Bounds x="1146" y="132" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1124" y="175" width="80" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Task: Quality Inspection (Quality lane) -->
+      <bpmndi:BPMNShape id="task-inspect-output_di" bpmnElement="task-inspect-output">
+        <dc:Bounds x="730" y="310" width="110" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Gateway: Passed Inspection? (Quality lane) -->
+      <bpmndi:BPMNShape id="gw-quality-decision_di" bpmnElement="gw-quality-decision" isMarkerVisible="true">
+        <dc:Bounds x="895" y="325" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="870" y="382" width="100" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Task: Record Completion (Quality lane) -->
+      <bpmndi:BPMNShape id="task-record-completion_di" bpmnElement="task-record-completion">
+        <dc:Bounds x="1010" y="310" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- End: Work Order Closed (Quality lane) -->
+      <bpmndi:BPMNShape id="end-work-order-closed_di" bpmnElement="end-work-order-closed">
+        <dc:Bounds x="1146" y="332" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1124" y="375" width="80" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="sf-start-to-verify_di" bpmnElement="sf-start-to-verify">
+        <di:waypoint x="198" y="150"/>
+        <di:waypoint x="250" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-verify-to-stage_di" bpmnElement="sf-verify-to-stage">
+        <di:waypoint x="360" y="150"/>
+        <di:waypoint x="410" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-stage-to-configure_di" bpmnElement="sf-stage-to-configure">
+        <di:waypoint x="520" y="150"/>
+        <di:waypoint x="570" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-configure-to-execute_di" bpmnElement="sf-configure-to-execute">
+        <di:waypoint x="680" y="150"/>
+        <di:waypoint x="730" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-execute-to-inspect_di" bpmnElement="sf-execute-to-inspect">
+        <di:waypoint x="785" y="190"/>
+        <di:waypoint x="785" y="310"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-inspect-to-gateway_di" bpmnElement="sf-inspect-to-gateway">
+        <di:waypoint x="840" y="350"/>
+        <di:waypoint x="895" y="350"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-passed_di" bpmnElement="sf-passed">
+        <di:waypoint x="945" y="350"/>
+        <di:waypoint x="1010" y="350"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="963" y="332" width="35" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-failed_di" bpmnElement="sf-failed">
+        <di:waypoint x="920" y="325"/>
+        <di:waypoint x="920" y="150"/>
+        <di:waypoint x="1010" y="150"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="926" y="230" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-record-to-end_di" bpmnElement="sf-record-to-end">
+        <di:waypoint x="1130" y="350"/>
+        <di:waypoint x="1146" y="350"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sf-nonconformance-to-end_di" bpmnElement="sf-nonconformance-to-end">
+        <di:waypoint x="1130" y="150"/>
+        <di:waypoint x="1146" y="150"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
