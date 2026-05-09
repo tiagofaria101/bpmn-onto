@@ -1,0 +1,55 @@
+[project]
+name = "bpmn-onto"
+version = "0.1.0"
+description = "Convert BPMN 2.0 process diagrams into validated ISA-95 ontologies using LLMs with a verifier-agent pattern."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Tiago" }]
+keywords = ["bpmn", "ontology", "isa-95", "llm", "rdf", "knowledge-graph"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "lxml>=5.0",
+    "rdflib>=7.0",
+    "pydantic>=2.0",
+    "click>=8.1",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.50"]
+all = ["anthropic>=0.40", "openai>=1.50"]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+bpmn-onto = "bpmn_onto.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bpmn_onto"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
